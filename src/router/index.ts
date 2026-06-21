@@ -16,6 +16,9 @@ import DisposalDetailPage from '@/pages/DisposalDetailPage.vue'
 import SettlementsPage from '@/pages/SettlementsPage.vue'
 import SettlementDetailPage from '@/pages/SettlementDetailPage.vue'
 import StatisticsPage from '@/pages/StatisticsPage.vue'
+import IncidentsPage from '@/pages/IncidentsPage.vue'
+import ProhibitedItemDetailPage from '@/pages/ProhibitedItemDetailPage.vue'
+import EntryBlockageDetailPage from '@/pages/EntryBlockageDetailPage.vue'
 
 const routes: RouteRecordRaw[] = [
   { path: '/', redirect: '/dashboard' },
@@ -36,6 +39,11 @@ const routes: RouteRecordRaw[] = [
   { path: '/settlement', name: 'settlements', component: SettlementsPage },
   { path: '/settlement/:id', name: 'settlementDetail', component: SettlementDetailPage },
   { path: '/statistics', name: 'statistics', component: StatisticsPage },
+  { path: '/incidents', name: 'incidents', component: IncidentsPage },
+  { path: '/incidents/prohibited/:id', name: 'prohibitedItemDetail', component: ProhibitedItemDetailPage },
+  { path: '/incidents/prohibited/new', name: 'newProhibitedItem', component: ProhibitedItemDetailPage },
+  { path: '/incidents/blockage/:id', name: 'entryBlockageDetail', component: EntryBlockageDetailPage },
+  { path: '/incidents/blockage/new', name: 'newEntryBlockage', component: EntryBlockageDetailPage },
 ]
 
 const router = createRouter({

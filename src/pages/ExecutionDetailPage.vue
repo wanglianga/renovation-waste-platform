@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useAuth } from '@/composables/useAuth'
 import { useApi } from '@/composables/useApi'
-import { ArrowLeft, Upload, Check } from 'lucide-vue-next'
+import { ArrowLeft, Upload, Check, AlertTriangle, MapPinOff } from 'lucide-vue-next'
 
+const { isRole } = useAuth()
 const { get, put, uploadFile } = useApi()
 const route = useRoute()
 const router = useRouter()
@@ -231,7 +233,16 @@ onMounted(fetchExecution)
       </div>
 
       <div class="card">
-        <h3 class="text-lg font-semibold mb-4">任务信息</h3>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold">任务信息</h3>
+          <button
+            v-if="isRole('driver') && execution.status === 'loading'"
+            class="btn-outline flex items-center gap-1 text-red-600 border-red-300 hover:bg-red-50 text-sm"
+            @click="router.push(`/incidents/blockage/new?execution_id=${execution.id}`)"
+          >
+            <MapPinOff :size="16" /> 进场受阻上报
+          </button>
+        </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div><span class="text-gray-500 text-sm">位置：</span>{{ execution.building_location }}</div>
           <div><span class="text-gray-500 text-sm">垃圾类型：</span>{{ wasteTypeLabel[execution.waste_type] || execution.waste_type }}</div>
@@ -253,9 +264,18 @@ onMounted(fetchExecution)
             <img :src="photo" class="w-full h-full object-cover" />
           </div>
         </div>
-        <button class="btn-primary" :disabled="submitting || loadPhotoPaths.length === 0" @click="submitLoad">
-          {{ submitting ? '提交中...' : '完成装车' }}
-        </button>
+        <div class="flex gap-3 flex-wrap">
+          <button class="btn-primary" :disabled="submitting || loadPhotoPaths.length === 0" @click="submitLoad">
+            {{ submitting ? '提交中...' : '完成装车' }}
+          </button>
+          <button
+            v-if="isRole('driver')"
+            class="btn-outline flex items-center gap-1 text-orange-600 border-orange-300 hover:bg-orange-50"
+            @click="router.push(`/incidents/prohibited/new?execution_id=${execution.id}`)"
+          >
+            <AlertTriangle :size="16" /> 上报禁收物
+          </button>
+        </div>
       </div>
 
       <div v-if="execution.status === 'weighing'" class="card">

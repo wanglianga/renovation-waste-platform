@@ -14,6 +14,7 @@ import {
   LogOut,
   Menu,
   X,
+  AlertTriangle,
 } from 'lucide-vue-next'
 import { ref } from 'vue'
 
@@ -35,6 +36,7 @@ const navItems: NavItem[] = [
   { label: '清运预约', icon: CalendarCheck, path: '/appointments', roles: ['owner', 'property'] },
   { label: '清运调度', icon: Truck, path: '/dispatch', roles: ['transport'] },
   { label: '清运执行', icon: ClipboardList, path: '/execution', roles: ['driver'] },
+  { label: '异常处置', icon: AlertTriangle, path: '/incidents', roles: ['owner', 'property', 'transport', 'driver'] },
   { label: '消纳接收', icon: Recycle, path: '/disposal', roles: ['disposal'] },
   { label: '结算对账', icon: Receipt, path: '/settlement', roles: ['owner', 'transport', 'disposal'] },
   { label: '统计分析', icon: BarChart3, path: '/statistics', roles: ['owner', 'property', 'transport', 'disposal'] },

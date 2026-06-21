@@ -150,6 +150,53 @@ export function initDatabase() {
       FOREIGN KEY (disposal_site_id) REFERENCES users(id)
     );
 
+    CREATE TABLE IF NOT EXISTS prohibited_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      execution_id INTEGER NOT NULL,
+      appointment_id INTEGER NOT NULL,
+      driver_id INTEGER NOT NULL,
+      item_type TEXT NOT NULL CHECK(item_type IN ('paint','battery','glue','other')),
+      description TEXT,
+      photos TEXT,
+      status TEXT DEFAULT 'reported' CHECK(status IN ('reported','confirmed','returned','surcharged','special_handled')),
+      handler_type TEXT CHECK(handler_type IN ('return','surcharge','special')),
+      property_confirmed_by INTEGER,
+      property_confirmed_at TEXT,
+      fee_impact TEXT DEFAULT 'none' CHECK(fee_impact IN ('none','increased')),
+      additional_fee REAL DEFAULT 0,
+      owner_notified INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (execution_id) REFERENCES executions(id),
+      FOREIGN KEY (appointment_id) REFERENCES appointments(id),
+      FOREIGN KEY (driver_id) REFERENCES users(id),
+      FOREIGN KEY (property_confirmed_by) REFERENCES users(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS entry_blockages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      execution_id INTEGER NOT NULL,
+      appointment_id INTEGER NOT NULL,
+      driver_id INTEGER NOT NULL,
+      blockage_type TEXT NOT NULL CHECK(blockage_type IN ('elevator_repair','garage_height','road_restriction','owner_absent','other')),
+      description TEXT,
+      arrival_time TEXT NOT NULL,
+      photos TEXT,
+      status TEXT DEFAULT 'reported' CHECK(status IN ('reported','rearranged','settled')),
+      rearranged_dispatch_id INTEGER,
+      rearranged_time TEXT,
+      empty_run_fee REAL DEFAULT 0,
+      empty_run_settled INTEGER DEFAULT 0,
+      property_responsibility TEXT CHECK(property_responsibility IN ('none','property','owner','third_party')),
+      property_traced_by INTEGER,
+      owner_notified INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now')),
+      FOREIGN KEY (execution_id) REFERENCES executions(id),
+      FOREIGN KEY (appointment_id) REFERENCES appointments(id),
+      FOREIGN KEY (driver_id) REFERENCES users(id),
+      FOREIGN KEY (rearranged_dispatch_id) REFERENCES dispatches(id),
+      FOREIGN KEY (property_traced_by) REFERENCES users(id)
+    );
+
     CREATE TABLE IF NOT EXISTS settlements (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       disposal_id INTEGER NOT NULL,

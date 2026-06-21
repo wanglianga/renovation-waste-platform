@@ -16,6 +16,7 @@ import executionRoutes from './routes/executions.js'
 import disposalRoutes from './routes/disposals.js'
 import settlementRoutes from './routes/settlements.js'
 import statisticsRoutes from './routes/statistics.js'
+import incidentRoutes from './routes/incidents.js'
 import uploadRoutes from './routes/upload.js'
 import baseRoutes from './routes/base.js'
 
@@ -42,6 +43,7 @@ app.use('/api/executions', executionRoutes)
 app.use('/api/disposals', disposalRoutes)
 app.use('/api/settlements', settlementRoutes)
 app.use('/api/statistics', statisticsRoutes)
+app.use('/api/incidents', incidentRoutes)
 app.use('/api/upload', uploadRoutes)
 app.use('/api/base', baseRoutes)
 

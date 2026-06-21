@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { useApi } from '@/composables/useApi'
-import { ArrowLeft } from 'lucide-vue-next'
+import { ArrowLeft, AlertTriangle, MapPinOff } from 'lucide-vue-next'
 
 const { isRole } = useAuth()
 const { get, put } = useApi()
@@ -53,6 +53,65 @@ const submitting = ref(false)
 const routeApproved = ref(true)
 const elevatorApproved = ref(true)
 
+interface ProhibitedItem {
+  id: number
+  item_type: string
+  status: string
+  handler_type: string | null
+  fee_impact: string
+  additional_fee: number
+  created_at: string
+}
+
+interface EntryBlockage {
+  id: number
+  blockage_type: string
+  status: string
+  arrival_time: string
+  empty_run_fee: number
+  empty_run_settled: number
+  rearranged_time: string | null
+  created_at: string
+}
+
+const prohibitedItems = ref<ProhibitedItem[]>([])
+const entryBlockages = ref<EntryBlockage[]>([])
+
+const itemTypeLabel: Record<string, string> = {
+  paint: '油漆桶',
+  battery: '电池',
+  glue: '胶水',
+  other: '其他禁收物',
+}
+
+const handlerTypeLabel: Record<string, string> = {
+  return: '退回',
+  surcharge: '加价处理',
+  special: '专项处理',
+}
+
+const prohibitedStatusLabel: Record<string, string> = {
+  reported: '待确认',
+  confirmed: '已确认',
+  returned: '已退回',
+  surcharged: '已加价',
+  special_handled: '专项处理',
+}
+
+const blockageTypeLabel: Record<string, string> = {
+  elevator_repair: '电梯维修',
+  garage_height: '车库限高',
+  road_restriction: '道路管制',
+  owner_absent: '业主未在家',
+  other: '其他原因',
+}
+
+const blockageStatusLabel: Record<string, string> = {
+  reported: '待处理',
+  rearranged: '已重新安排',
+  settled: '已结算',
+}
+
 const statusBadge: Record<string, string> = {
   pending: 'badge-pending',
   approved: 'badge-approved',
@@ -82,6 +141,17 @@ async function fetchAppointment() {
   try {
     const data = await get<Appointment>(`/appointments/${route.params.id}`)
     appointment.value = data
+    try {
+      const [piData, ebData] = await Promise.all([
+        get<ProhibitedItem[]>('/incidents/prohibited-items'),
+        get<EntryBlockage[]>('/incidents/entry-blockages'),
+      ])
+      prohibitedItems.value = piData.filter((pi: any) => pi.appointment_id === data.id)
+      entryBlockages.value = ebData.filter((eb: any) => eb.appointment_id === data.id)
+    } catch {
+      prohibitedItems.value = []
+      entryBlockages.value = []
+    }
   } catch {
     appointment.value = null
   } finally {
@@ -168,6 +238,46 @@ onMounted(fetchAppointment)
           <div><span class="text-gray-500 text-sm">车辆类型：</span>{{ appointment.dispatch.vehicle_type }}</div>
           <div><span class="text-gray-500 text-sm">司机姓名：</span>{{ appointment.dispatch.driver_name }}</div>
           <div><span class="text-gray-500 text-sm">司机电话：</span>{{ appointment.dispatch.driver_phone }}</div>
+        </div>
+      </div>
+
+      <div v-if="prohibitedItems.length > 0" class="card border-orange-200">
+        <div class="flex items-center gap-2 mb-4">
+          <AlertTriangle class="text-orange-500" :size="20" />
+          <h3 class="text-lg font-semibold text-orange-800">禁收物记录</h3>
+        </div>
+        <div v-for="pi in prohibitedItems" :key="pi.id" class="border-b border-orange-100 last:border-b-0 py-3">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div><span class="text-gray-500 text-sm">禁收物类型：</span>{{ itemTypeLabel[pi.item_type] || pi.item_type }}</div>
+            <div><span class="text-gray-500 text-sm">处理方式：</span>{{ handlerTypeLabel[pi.handler_type!] || '待确认' }}</div>
+            <div><span class="text-gray-500 text-sm">费用影响：</span>
+              <span v-if="pi.fee_impact === 'increased'" class="text-red-600 font-medium">+{{ pi.additional_fee }}元</span>
+              <span v-else>无影响</span>
+            </div>
+          </div>
+          <div class="mt-1">
+            <button class="text-primary-700 hover:underline text-sm" @click="router.push(`/incidents/prohibited/${pi.id}`)">查看详情</button>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="entryBlockages.length > 0" class="card border-red-200">
+        <div class="flex items-center gap-2 mb-4">
+          <MapPinOff class="text-red-500" :size="20" />
+          <h3 class="text-lg font-semibold text-red-800">进场受阻记录</h3>
+        </div>
+        <div v-for="eb in entryBlockages" :key="eb.id" class="border-b border-red-100 last:border-b-0 py-3">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+            <div><span class="text-gray-500 text-sm">受阻原因：</span>{{ blockageTypeLabel[eb.blockage_type] || eb.blockage_type }}</div>
+            <div><span class="text-gray-500 text-sm">状态：</span>{{ blockageStatusLabel[eb.status] || eb.status }}</div>
+            <div><span class="text-gray-500 text-sm">空跑费：</span>
+              <span v-if="eb.empty_run_settled" class="text-orange-600 font-medium">{{ eb.empty_run_fee }}元</span>
+              <span v-else>-</span>
+            </div>
+          </div>
+          <div class="mt-1">
+            <button class="text-primary-700 hover:underline text-sm" @click="router.push(`/incidents/blockage/${eb.id}`)">查看详情</button>
+          </div>
         </div>
       </div>
 
